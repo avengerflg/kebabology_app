@@ -1,3 +1,5 @@
+// lib/core/theme/app_theme.dart
+
 import 'package:flutter/material.dart';
 import '../constants/app_constants.dart';
 
@@ -95,23 +97,23 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: AppConstants.cardColor,
         elevation: 4,
-        shadowColor: AppConstants.accentColor.withValues(alpha: 0.08),
+        shadowColor: AppConstants.accentColor.withOpacity(0.08),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       checkboxTheme: CheckboxThemeData(
-        fillColor: WidgetStateProperty.resolveWith<Color>((states) {
-          if (states.contains(WidgetState.selected)) {
+        fillColor: MaterialStateProperty.resolveWith<Color>((states) {
+          if (states.contains(MaterialState.selected)) {
             return AppConstants.accentColor;
           }
           return Colors.transparent;
         }),
-        checkColor: WidgetStateProperty.all(Colors.white),
+        checkColor: MaterialStateProperty.all(Colors.white),
         side: const BorderSide(color: AppConstants.accentColor, width: 1.5),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
       ),
       radioTheme: RadioThemeData(
-        fillColor: WidgetStateProperty.resolveWith<Color>((states) {
-          if (states.contains(WidgetState.selected)) {
+        fillColor: MaterialStateProperty.resolveWith<Color>((states) {
+          if (states.contains(MaterialState.selected)) {
             return AppConstants.accentColor;
           }
           return AppConstants.borderColor;
@@ -121,14 +123,14 @@ class AppTheme {
         activeTrackColor: AppConstants.accentColor,
         inactiveTrackColor: AppConstants.borderColor,
         thumbColor: AppConstants.accentColor,
-        overlayColor: AppConstants.accentColor.withValues(alpha: 0.1),
+        overlayColor: AppConstants.accentColor.withOpacity(0.1),
         trackHeight: 4,
         thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           elevation: 2,
-          shadowColor: AppConstants.accentColor.withValues(alpha: 0.2),
+          shadowColor: AppConstants.accentColor.withOpacity(0.2),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -141,10 +143,10 @@ class AppTheme {
     List strengths = <double>[.05];
     Map<int, Color> swatch = {};
 
-    // Update deprecated color component accessors
-    final int r = (color.r * 255.0).round() & 0xff;
-    final int g = (color.g * 255.0).round() & 0xff;
-    final int b = (color.b * 255.0).round() & 0xff;
+    // Fixed deprecated color component accessors
+    final int r = color.red;
+    final int g = color.green;
+    final int b = color.blue;
 
     for (int i = 1; i < 10; i++) {
       strengths.add(0.1 * i);
@@ -159,6 +161,6 @@ class AppTheme {
       );
     }
 
-    return MaterialColor(color.toARGB32(), swatch);
+    return MaterialColor(color.value, swatch);
   }
 }

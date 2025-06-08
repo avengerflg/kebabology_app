@@ -1,3 +1,5 @@
+// lib/core/constants/app_constants.dart
+
 import 'package:flutter/material.dart';
 
 class AppConstants {
@@ -24,18 +26,9 @@ class AppConstants {
   static const String kebabCalorieCounter = 'Calorie Counter';
   static const String kebabalogue = 'Kebabalogue';
 
-  // Calculation Constants based on your Excel data
-  static const double maxSaladRatio = 3.0; // 300% max for salads
-  static const int maxSauces = 3; // Maximum 3 sauces
-  static const double standardKebabWeight = 430.0; // Base weight in grams
-
-  // Standard ingredient weights for 430g kebab (from your data)
-  static const Map<String, double> standardWeights = {
-    'meat': 175.0, // Average meat component weight
-    'bread': 92.7, // Average bread weight (98+80+100)/3
-    'sauce': 26.6, // Average sauce weight per sauce
-    'salad': 44.6, // Average salad weight per item
-  };
+  // EXACT Excel Constants
+  static const double standardKebabWeight = 430.0; // Base weight from Excel
+  static const int maxSauces = 3; // Maximum 3 sauces from Excel
 
   // Nutritional guidelines
   static const Map<String, String> nutritionUnits = {
@@ -43,6 +36,7 @@ class AppConstants {
     'protein': 'g',
     'carbohydrates': 'g',
     'fat': 'g',
+    'saturatedFat': 'g',
     'fiber': 'g',
     'sugar': 'g',
     'sodium': 'mg',

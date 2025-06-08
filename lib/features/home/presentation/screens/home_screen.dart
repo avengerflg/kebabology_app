@@ -1,7 +1,10 @@
-import 'dart:ui';
+// lib/features/home/presentation/screens/home_screen.dart
 
+import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:kebabology_app/core/constants/app_constants.dart';
+import 'package:kebabologist_app/core/constants/app_constants.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../../calorie_calculator/presentation/screens/calculator_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -38,7 +41,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       curve: Curves.easeOutQuart,
     );
 
-    // Start animations
     _headerAnimationController.forward();
     Future.delayed(const Duration(milliseconds: 300), () {
       _cardAnimationController.forward();
@@ -61,7 +63,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       backgroundColor: AppConstants.backgroundColor,
       body: Stack(
         children: [
-          // Enhanced background with animated gradients
           ..._buildAnimatedBackground(screenHeight, screenWidth),
           SafeArea(
             child: Column(
@@ -87,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     opacity: _headerAnimation.value.clamp(
                                       0.0,
                                       1.0,
-                                    ), // Fix opacity
+                                    ),
                                     child: _buildEnhancedHeader(context),
                                   ),
                                 );
@@ -106,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     opacity: _cardAnimation.value.clamp(
                                       0.0,
                                       1.0,
-                                    ), // Fix opacity
+                                    ),
                                     child: _buildEnhancedFeaturesSection(
                                       context,
                                     ),
@@ -135,24 +136,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     double screenWidth,
   ) {
     return [
-      // Only use the background image with blur
       SizedBox.expand(
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // Background image
             Image.asset(
               'assets/images/bg.jpeg',
               fit: BoxFit.cover,
               width: double.infinity,
               height: double.infinity,
             ),
-
-            // Blur overlay with a slight tint for readability
             BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3), // Decreased blur
+              filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
               child: Container(
-                color: AppConstants.backgroundColor.withValues(alpha: 0.3),
+                color: AppConstants.backgroundColor.withOpacity(0.3),
               ),
             ),
           ],
@@ -162,162 +159,209 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildEnhancedHeader(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Column(
       children: [
-        // Enhanced logo with glassmorphism effect, now square
         Container(
-          width: 100,
-          height: 100,
+          width: 80, // Changed from double.infinity to 80 for icon size
+          height: 80, // Changed from 120 to 80 to make it square
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Colors.white.withValues(alpha: 0.9),
-                AppConstants.surfaceColor.withValues(alpha: 0.7),
+                Colors.white.withOpacity(0.9),
+                AppConstants.surfaceColor.withOpacity(0.7),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(
-              24,
-            ), // Square with rounded corners
+            borderRadius: BorderRadius.circular(20), // Reduced from 24 to 20
             boxShadow: [
               BoxShadow(
-                color: AppConstants.accentColor.withValues(alpha: 0.15),
-                blurRadius: 30,
-                offset: const Offset(0, 10),
+                color: AppConstants.accentColor.withOpacity(0.15),
+                blurRadius: 20, // Reduced from 30 to 20
+                offset: const Offset(0, 8), // Reduced from 10 to 8
               ),
               BoxShadow(
-                color: Colors.white.withValues(alpha: 0.9),
-                blurRadius: 20,
-                offset: const Offset(0, -5),
+                color: Colors.white.withOpacity(0.9),
+                blurRadius: 15, // Reduced from 20 to 15
+                offset: const Offset(0, -3), // Reduced from -5 to -3
               ),
             ],
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.3),
-              width: 0,
-            ),
+            border: Border.all(color: Colors.white.withOpacity(0.3), width: 0),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(
-              5,
-            ), // Add padding to make image smaller
+          child: Center(
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(16), // Reduced from 16 to 12
               child: Image.asset(
                 'assets/images/logo.jpeg',
-                fit: BoxFit.contain,
-                width: 80,
-                height: 80,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
               ),
             ),
           ),
         ),
         const SizedBox(height: 24),
-        // Enhanced title with better gradient
-        ShaderMask(
-          shaderCallback: (bounds) => LinearGradient(
-            colors: [
-              AppConstants.textColor,
-              AppConstants.accentColor,
-              AppConstants.textColor.withValues(alpha: 0.8),
-            ],
-            stops: const [0.0, 0.5, 1.0],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ).createShader(bounds),
+        FittedBox(
+          fit: BoxFit.scaleDown,
           child: Text(
-            'Kebabology',
+            'KEBABOLOGIST',
             style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-              fontWeight: FontWeight.w800,
-              letterSpacing: -1.2,
-              fontSize: 36,
+              fontWeight: FontWeight.w900,
+              letterSpacing: screenWidth < 380 ? 1.0 : 2.0,
+              fontSize: screenWidth < 380 ? 36 : 44,
               color: Colors.white,
-              height: 1.1,
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppConstants.accentColor.withValues(alpha: 0.1),
-                AppConstants.accentColor.withValues(alpha: 0.05),
+              height: 1.0,
+              shadows: [
+                Shadow(
+                  offset: const Offset(3, 3),
+                  blurRadius: 8.0,
+                  color: Colors.black.withOpacity(0.5),
+                ),
+                Shadow(
+                  offset: const Offset(-1, -1),
+                  blurRadius: 4.0,
+                  color: Colors.black.withOpacity(0.3),
+                ),
+                Shadow(
+                  offset: const Offset(0, 0),
+                  blurRadius: 15.0,
+                  color: AppConstants.accentColor.withOpacity(0.4),
+                ),
               ],
             ),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white, width: 1),
+            maxLines: 1,
+            overflow: TextOverflow.visible,
           ),
-          child: Text(
-            'Make Kebabs Great Again',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.white, // Changed from gold accent to white
-              fontWeight: FontWeight.w500,
-              letterSpacing: 0.5,
-            ),
-            textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        // Added background container for social buttons
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.3), // Semi-transparent background
+            borderRadius: BorderRadius.circular(25),
+            border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildSocialButton(
+                context: context,
+                icon: FontAwesomeIcons.tiktok,
+                color: Colors.white,
+                url: 'https://www.tiktok.com/@ox_show?_t=8qxaraa9ruq&_r=1',
+              ),
+              const SizedBox(width: 20),
+              _buildSocialButton(
+                context: context,
+                icon: FontAwesomeIcons.instagram,
+                color: Colors.white,
+                url: 'https://www.instagram.com/ox_show2000',
+              ),
+              const SizedBox(width: 20),
+              _buildSocialButton(
+                context: context,
+                icon: FontAwesomeIcons.youtube,
+                color: Colors.white,
+                url: 'https://youtube.com/@oxshow2000?si=278jG7V-G1a4Y6hs',
+              ),
+            ],
           ),
         ),
       ],
     );
   }
 
+  Widget _buildSocialButton({
+    required BuildContext context,
+    required IconData icon,
+    required Color color,
+    required String url,
+  }) {
+    return InkWell(
+      onTap: () async {
+        final Uri uri = Uri.parse(url);
+        try {
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          } else {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('Could not launch $url')));
+          }
+        } catch (e) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        }
+      },
+      child: Container(
+        width: 50,
+        height: 36,
+        // Remove the decoration to remove the background
+        // decoration: BoxDecoration(
+        //   color: Colors.red,
+        //   borderRadius: BorderRadius.circular(8),
+        //   boxShadow: [
+        //     BoxShadow(
+        //       color: Colors.black.withOpacity(0.2),
+        //       blurRadius: 4,
+        //       offset: const Offset(0, 2),
+        //     ),
+        //   ],
+        // ),
+        alignment: Alignment.center,
+        child: FaIcon(icon, color: color, size: 22),
+      ),
+    );
+  }
+
   Widget _buildEnhancedFeaturesSection(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Container(
-              width: 4,
-              height: 24,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppConstants.accentColor, AppConstants.goldAccent],
+        Transform.scale(
+          scale: 1, // Adjust this value to make it smaller or larger
+          child: _buildEnhancedHeroCard(
+            context,
+            title: 'Kebab Calorie Calculator',
+            subtitle:
+                'Track nutrition & make informed choices for your kebabs.',
+            icon: FontAwesomeIcons.calculator,
+            onTap: () {
+              Navigator.push(
+                context,
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) =>
+                      const CalculatorScreen(),
+                  transitionsBuilder:
+                      (context, animation, secondaryAnimation, child) {
+                        return SlideTransition(
+                          position: animation.drive(
+                            Tween(
+                              begin: const Offset(1.0, 0.0),
+                              end: Offset.zero,
+                            ).chain(CurveTween(curve: Curves.easeOutCubic)),
+                          ),
+                          child: child,
+                        );
+                      },
+                  transitionDuration: const Duration(milliseconds: 300),
                 ),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              'Explore Features',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: AppConstants.textColor,
-                letterSpacing: -0.5,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        _buildEnhancedHeroCard(
-          context,
-          title: 'Calorie Counter',
-          subtitle: 'Track nutrition & make informed choices for your kebabs.',
-          icon: Icons.calculate_outlined,
-          onTap: () {
-            Navigator.push(
-              context,
-              PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) =>
-                    const CalculatorScreen(),
-                transitionsBuilder:
-                    (context, animation, secondaryAnimation, child) {
-                      return SlideTransition(
-                        position: animation.drive(
-                          Tween(
-                            begin: const Offset(1.0, 0.0),
-                            end: Offset.zero,
-                          ).chain(CurveTween(curve: Curves.easeOutCubic)),
-                        ),
-                        child: child,
-                      );
-                    },
-                transitionDuration: const Duration(milliseconds: 300),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
         const SizedBox(height: 20),
         Row(
@@ -326,9 +370,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               child: _buildEnhancedSecondaryCard(
                 context,
                 title: 'Kebabalogue',
-                subtitle: 'Discover kebab types',
-                icon: Icons.menu_book_outlined,
-                primaryColor: const Color(0xFF4CAF50),
+                subtitle:
+                    'The most detailed study conducted in the country on kebab shops. Come check out the shops and their ratings! Coming soon',
+                icon: FontAwesomeIcons.mapLocationDot,
+                primaryColor: const Color(0xFF2196F3),
                 isComingSoon: true,
                 onTap: () => _showEnhancedComingSoonDialog(context),
               ),
@@ -337,9 +382,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             Expanded(
               child: _buildEnhancedSecondaryCard(
                 context,
-                title: 'Kebab Reviews',
-                subtitle: 'Share your ratings',
-                icon: Icons.star_border_purple500_outlined,
+                title: 'Fresh Tomatoes',
+                subtitle:
+                    'Kebab reviews - have your say on your most liked/disliked kebab shops that must be approved by me before publicly being posted. No fake reviews here!',
+                icon: FontAwesomeIcons.star,
                 primaryColor: const Color(0xFFE91E63),
                 isComingSoon: true,
                 onTap: () => _showEnhancedComingSoonDialog(context),
@@ -358,6 +404,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     required IconData icon,
     required VoidCallback onTap,
   }) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -368,12 +416,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppConstants.accentColor.withValues(alpha: 0.3),
+            color: AppConstants.accentColor.withOpacity(0.3),
             blurRadius: 25,
             offset: const Offset(0, 10),
           ),
           BoxShadow(
-            color: Colors.white.withValues(alpha: 0.1),
+            color: Colors.white.withOpacity(0.1),
             blurRadius: 1,
             offset: const Offset(0, 1),
           ),
@@ -384,43 +432,39 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(24),
-          splashColor: Colors.white.withValues(alpha: 0.1),
-          highlightColor: Colors.white.withValues(alpha: 0.05),
+          splashColor: Colors.white.withOpacity(0.1),
+          highlightColor: Colors.white.withOpacity(0.05),
           child: Container(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(screenWidth < 380 ? 16 : 20),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(24),
               gradient: LinearGradient(
-                colors: [
-                  Colors.white.withValues(alpha: 0.1),
-                  Colors.transparent,
-                ],
+                colors: [Colors.white.withOpacity(0.08), Colors.transparent],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.3),
-                      width: 1,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Icon(icon, color: Colors.white, size: 28),
+                  width: screenWidth < 380 ? 56 : 64,
+                  height: screenWidth < 380 ? 56 : 64,
+                  alignment: Alignment.center,
+                  child: title == 'Kebab Calorie Calculator'
+                      ? Image.asset(
+                          'assets/images/icon.png',
+                          width: screenWidth < 380 ? 40 : 48,
+                          height: screenWidth < 380 ? 40 : 48,
+                          fit: BoxFit.contain,
+                        )
+                      : FaIcon(
+                          icon,
+                          color: Colors.white,
+                          size: screenWidth < 380 ? 36 : 40,
+                        ),
                 ),
-                const SizedBox(width: 20),
+                SizedBox(width: screenWidth < 380 ? 12 : 18),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -429,16 +473,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         title,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.3,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
+                          fontSize: screenWidth < 380
+                              ? 15
+                              : 18, // Reduced from 18:22
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 6),
                       Text(
                         subtitle,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          height: 1.4,
+                          color: Colors.white.withOpacity(0.92),
+                          height: 1.5,
+                          fontSize: screenWidth < 380 ? 12 : 14,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -446,16 +496,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.white.withOpacity(0.13),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                   child: Icon(
                     Icons.arrow_forward_ios,
-                    color: Colors.white.withValues(alpha: 0.8),
-                    size: 16,
+                    color: Colors.white.withOpacity(0.85),
+                    size: 18,
                   ),
                 ),
               ],
@@ -476,22 +527,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     bool isComingSoon = false,
   }) {
     return Container(
-      height: 180, // Reduced height to prevent overflow
+      height: 210,
       decoration: BoxDecoration(
         color: AppConstants.cardColor,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppConstants.borderColor.withValues(alpha: 0.5),
+          color: AppConstants.borderColor.withOpacity(0.5),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: Colors.black.withOpacity(0.08),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
           BoxShadow(
-            color: Colors.white.withValues(alpha: 0.8),
+            color: Colors.white.withOpacity(0.8),
             blurRadius: 1,
             offset: const Offset(0, 1),
           ),
@@ -502,17 +553,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(20),
-          splashColor: primaryColor.withValues(alpha: 0.1),
-          highlightColor: primaryColor.withValues(alpha: 0.05),
+          splashColor: primaryColor.withOpacity(0.1),
+          highlightColor: primaryColor.withOpacity(0.05),
           child: Container(
-            padding: const EdgeInsets.all(16), // Reduced padding
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               gradient: LinearGradient(
-                colors: [
-                  Colors.white.withValues(alpha: 0.5),
-                  Colors.transparent,
-                ],
+                colors: [Colors.white.withOpacity(0.5), Colors.transparent],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -521,32 +569,27 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(14), // Reduced padding
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        primaryColor.withValues(alpha: 0.15),
-                        primaryColor.withValues(alpha: 0.05),
+                        primaryColor.withOpacity(0.15),
+                        primaryColor.withOpacity(0.05),
                       ],
                     ),
-                    borderRadius: BorderRadius.circular(16), // Slightly smaller
+                    borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: primaryColor.withValues(alpha: 0.2),
+                      color: primaryColor.withOpacity(0.2),
                       width: 1,
                     ),
                   ),
-                  child: Icon(
-                    icon,
-                    color: primaryColor,
-                    size: 28,
-                  ), // Slightly smaller
+                  child: FaIcon(icon, color: primaryColor, size: 28),
                 ),
-                const SizedBox(height: 12), // Reduced spacing
+                const SizedBox(height: 10),
                 Text(
                   title,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    // Changed to titleSmall
                     fontWeight: FontWeight.w700,
                     color: AppConstants.textColor,
                     letterSpacing: -0.2,
@@ -554,36 +597,34 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4), // Reduced spacing
+                const SizedBox(height: 4),
                 Text(
                   subtitle,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppConstants.secondaryTextColor,
-                    fontSize: 11, // Slightly smaller
+                    fontSize: 9,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  maxLines: 5,
+                  overflow: TextOverflow.visible,
                 ),
                 if (isComingSoon) ...[
-                  const SizedBox(height: 8), // Reduced spacing
+                  const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 10, // Reduced padding
-                      vertical: 3, // Reduced padding
+                      horizontal: 10,
+                      vertical: 3,
                     ),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          AppConstants.goldAccent.withValues(alpha: 0.2),
-                          AppConstants.goldAccent.withValues(alpha: 0.1),
+                          AppConstants.goldAccent.withOpacity(0.2),
+                          AppConstants.goldAccent.withOpacity(0.1),
                         ],
                       ),
-                      borderRadius: BorderRadius.circular(
-                        10,
-                      ), // Slightly smaller
+                      borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: AppConstants.goldAccent.withValues(alpha: 0.4),
+                        color: AppConstants.goldAccent.withOpacity(0.4),
                         width: 1,
                       ),
                     ),
@@ -591,14 +632,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       'COMING SOON',
                       style: TextStyle(
                         color: AppConstants.goldAccent,
-                        fontSize: 9, // Smaller font
+                        fontSize: 9,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 0.8,
                       ),
                     ),
                   ),
                 ] else ...[
-                  const SizedBox(height: 8), // Add space when no badge
+                  const SizedBox(height: 8),
                 ],
               ],
             ),
@@ -612,16 +653,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 24),
       decoration: BoxDecoration(
-        // Removed background color for transparency
-        border: Border(
-          top: BorderSide(
-            color: AppConstants.borderColor.withValues(alpha: 0.3),
-            width: 1,
-          ),
-        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),
@@ -633,14 +667,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppConstants.goldAccent.withValues(alpha: 0.1),
+              color: AppConstants.goldAccent.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Text('🇦🇺', style: TextStyle(fontSize: 16)),
+            child: Image.asset(
+              'assets/icons/splash_logo.png',
+              width: 20,
+              height: 20,
+              fit: BoxFit.contain,
+            ),
           ),
           const SizedBox(width: 12),
           Text(
-            'Proudly Australian Made',
+            'Powered by Fettayleh Foods',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: AppConstants.goldAccent,
               fontWeight: FontWeight.w600,
@@ -656,7 +695,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     showDialog(
       context: context,
       barrierDismissible: true,
-      barrierColor: Colors.black.withValues(alpha: 0.7),
+      barrierColor: Colors.black.withOpacity(0.7),
       builder: (BuildContext dialogContext) {
         return Dialog(
           shape: RoundedRectangleBorder(
@@ -670,12 +709,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               borderRadius: BorderRadius.circular(28),
               color: AppConstants.surfaceColor,
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.2),
+                color: Colors.white.withOpacity(0.2),
                 width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.2),
+                  color: Colors.black.withOpacity(0.2),
                   blurRadius: 30,
                   offset: const Offset(0, 15),
                 ),
@@ -690,13 +729,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     gradient: LinearGradient(
                       colors: [
                         AppConstants.goldAccent,
-                        AppConstants.goldAccent.withValues(alpha: 0.8),
+                        AppConstants.goldAccent.withOpacity(0.8),
                       ],
                     ),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: AppConstants.goldAccent.withValues(alpha: 0.4),
+                        color: AppConstants.goldAccent.withOpacity(0.4),
                         blurRadius: 20,
                         offset: const Offset(0, 8),
                       ),
@@ -736,9 +775,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         borderRadius: BorderRadius.circular(16),
                       ),
                       elevation: 5,
-                      shadowColor: AppConstants.accentColor.withValues(
-                        alpha: 0.3,
-                      ),
+                      shadowColor: AppConstants.accentColor.withOpacity(0.3),
                     ),
                     child: Text(
                       'Got It!',

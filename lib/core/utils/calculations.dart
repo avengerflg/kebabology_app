@@ -1,47 +1,76 @@
-class CalculationUtils {
-  // Calculate salad ratio based on number of selected salads
-  static double calculateSaladRatio(int selectedSalads) {
-    if (selectedSalads == 0) return 0.0;
-    if (selectedSalads <= 3) return 1.0;
-    return 3.0 / selectedSalads; // Max 300% total, distributed evenly
-  }
+// lib/core/utils/calculations.dart
 
-  // Calculate sauce ratio based on number of selected sauces
-  static double calculateSauceRatio(int selectedSauces) {
-    if (selectedSauces == 0) return 0.0;
-    if (selectedSauces == 1) return 1.0;
-    if (selectedSauces == 2) return 0.5;
-    if (selectedSauces >= 3) return 0.33; // Max 3 sauces
-    return 1.0;
-  }
+import '../constants/app_constants.dart';
 
-  // Calculate weight factor
-  static double calculateWeightFactor(
-    double currentWeight,
-    double standardWeight,
+class Calculations {
+  // Calculate percentage of each component type
+  static Map<String, double> calculateComponentPercentages(
+    Map<String, double> componentCalories,
+    double totalCalories,
   ) {
-    return currentWeight / standardWeight;
+    if (totalCalories == 0) {
+      return {'bread': 0, 'meat': 0, 'salad': 0, 'sauce': 0};
+    }
+
+    return {
+      'bread': (componentCalories['bread'] ?? 0) / totalCalories * 100,
+      'meat': (componentCalories['meat'] ?? 0) / totalCalories * 100,
+      'salad': (componentCalories['salad'] ?? 0) / totalCalories * 100,
+      'sauce': (componentCalories['sauce'] ?? 0) / totalCalories * 100,
+    };
   }
 
-  // Round to 1 decimal place
-  static double roundToOneDecimal(double value) {
-    return double.parse(value.toStringAsFixed(1));
+  // Format weight display
+  static String formatWeight(double weight) {
+    return '${weight.round()}g';
   }
 
-  // Helper methods for UI text
-  static String getSaladSelectionText(int selectedSalads) {
-    if (selectedSalads == 0) return 'No salads selected';
-    if (selectedSalads <= 3) return '$selectedSalads salads (100% each)';
-
-    final percentage = (300 / selectedSalads).round();
-    return '$selectedSalads salads ($percentage% each)';
+  // Format percentage display
+  static String formatPercentage(double percentage) {
+    return '${percentage.toStringAsFixed(1)}%';
   }
 
-  static String getSauceSelectionText(int selectedSauces) {
-    if (selectedSauces == 0) return 'No sauces selected';
-    if (selectedSauces == 1) return '1 sauce (100%)';
-    if (selectedSauces == 2) return '2 sauces (50% each)';
-    if (selectedSauces >= 3) return '3 sauces (33% each)';
-    return '';
+  // Calculate daily value percentage (based on 2000 calorie diet)
+  static Map<String, double> calculateDailyValues(
+    Map<String, double> nutrition,
+  ) {
+    const dailyValues = {
+      'calories': 2000.0,
+      'protein': 50.0,
+      'carbohydrates': 300.0,
+      'fat': 65.0,
+      'saturatedFat': 20.0,
+      'fiber': 25.0,
+      'sugar': 50.0,
+      'sodium': 2300.0,
+    };
+
+    final percentages = <String, double>{};
+
+    nutrition.forEach((nutrient, value) {
+      final dailyValue = dailyValues[nutrient];
+      if (dailyValue != null && dailyValue > 0) {
+        percentages[nutrient] = (value / dailyValue) * 100;
+      }
+    });
+
+    return percentages;
+  }
+
+  // Get color based on daily value percentage
+  static String getDailyValueColor(double percentage) {
+    if (percentage <= 5) return 'low';
+    if (percentage <= 20) return 'moderate';
+    return 'high';
+  }
+
+  // Calculate weight difference from standard
+  static String getWeightDifference(double weight) {
+    final difference = weight - AppConstants.standardKebabWeight;
+    if (difference == 0) return 'Standard weight';
+    if (difference > 0) {
+      return '+${difference.round()}g from standard';
+    }
+    return '${difference.round()}g from standard';
   }
 }

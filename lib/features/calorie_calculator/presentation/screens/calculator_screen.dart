@@ -1,10 +1,13 @@
+// lib/features/calorie_calculator/presentation/screens/calculator_screen.dart
+
 import 'package:flutter/material.dart';
-import 'package:kebabology_app/core/constants/app_constants.dart';
 import 'package:provider/provider.dart';
 import '../providers/calculator_provider.dart';
 import '../widgets/component_selector.dart';
-import '../widgets/nutrition_display.dart';
 import '../widgets/weight_slider.dart';
+import '../widgets/nutrition_display.dart';
+import '../../../../core/constants/app_constants.dart';
+import '../../data/models/kebab_component.dart';
 
 class CalculatorScreen extends StatefulWidget {
   const CalculatorScreen({super.key});
@@ -15,55 +18,436 @@ class CalculatorScreen extends StatefulWidget {
 
 class _CalculatorScreenState extends State<CalculatorScreen>
     with TickerProviderStateMixin {
-  late AnimationController _animationController;
+  final ScrollController _scrollController = ScrollController();
+  late AnimationController _fadeController;
+  late AnimationController _slideController;
   late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _slideController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    _fadeAnimation = CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutCubic,
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
     );
-    _animationController.forward();
+
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+        );
+
+    _fadeController.forward();
+    _slideController.forward();
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
+    _scrollController.dispose();
+    _fadeController.dispose();
+    _slideController.dispose();
     super.dispose();
+  }
+
+  void _scrollToNutrition() {
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => CalculatorProvider(),
-      child: Scaffold(
-        backgroundColor: AppConstants.backgroundColor,
-        body: FadeTransition(
-          opacity: _fadeAnimation,
-          child: SafeArea(
-            child: CustomScrollView(
-              physics: const BouncingScrollPhysics(),
-              slivers: [
-                // App Bar
-                SliverToBoxAdapter(child: _buildModernAppBar(context)),
-                // Main Content
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-                  sliver: SliverList(
-                    delegate: SliverChildListDelegate([
-                      _buildKebabBuilderCard(),
-                      const SizedBox(height: 20),
-                      _buildWeightAndNutritionRow(),
-                    ]),
-                  ),
-                ),
+    final theme = Theme.of(context);
+    final size = MediaQuery.of(context).size;
+
+    return Scaffold(
+      backgroundColor: Colors.grey.shade50,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        title: Text(
+          'Kebab Calorie Calculator',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+            letterSpacing: -0.5,
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppConstants.accentColor,
+                AppConstants.accentColor.withOpacity(0.9),
               ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppConstants.accentColor.withOpacity(0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+        ),
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: IconButton(
+            icon: const Icon(
+              Icons.arrow_back_ios_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ),
+        actions: [
+          Consumer<CalculatorProvider>(
+            builder: (context, provider, child) {
+              if (!provider.hasSelections) return const SizedBox.shrink();
+
+              return Container(
+                margin: const EdgeInsets.only(right: 12, top: 8, bottom: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.refresh_rounded,
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (dialogContext) =>
+                          _buildClearDialog(dialogContext, provider),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: SlideTransition(
+          position: _slideAnimation,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppConstants.accentColor.withOpacity(0.08),
+                  Colors.grey.shade50,
+                  Colors.white,
+                ],
+                stops: const [0.0, 0.4, 1.0],
+              ),
+            ),
+            child: Consumer<CalculatorProvider>(
+              builder: (context, provider, child) {
+                return CustomScrollView(
+                  controller: _scrollController,
+                  physics: const BouncingScrollPhysics(),
+                  slivers: [
+                    // Header space for app bar
+                    SliverToBoxAdapter(
+                      child: SizedBox(
+                        height:
+                            MediaQuery.of(context).padding.top +
+                            kToolbarHeight +
+                            10,
+                      ),
+                    ),
+
+                    // Welcome Hero Section
+                    SliverToBoxAdapter(
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.all(28),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Colors.white,
+                                Colors.grey.shade50.withOpacity(0.8),
+                                Colors.white.withOpacity(0.95),
+                              ],
+                              stops: const [0.0, 0.5, 1.0],
+                            ),
+                            borderRadius: BorderRadius.circular(28),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.6),
+                              width: 1.5,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppConstants.accentColor.withOpacity(
+                                  0.15,
+                                ),
+                                blurRadius: 35,
+                                offset: const Offset(0, 12),
+                                spreadRadius: -8,
+                              ),
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.08),
+                                blurRadius: 25,
+                                offset: const Offset(0, 8),
+                                spreadRadius: -5,
+                              ),
+                              BoxShadow(
+                                color: Colors.white.withOpacity(0.7),
+                                blurRadius: 15,
+                                offset: const Offset(0, -2),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              Container(
+                                width: 80,
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Colors.white,
+                                      AppConstants.surfaceColor.withOpacity(
+                                        0.3,
+                                      ),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(24),
+                                  border: Border.all(
+                                    color: AppConstants.accentColor.withOpacity(
+                                      0.2,
+                                    ),
+                                    width: 2,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppConstants.accentColor
+                                          .withOpacity(0.2),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                    BoxShadow(
+                                      color: Colors.white.withOpacity(0.9),
+                                      blurRadius: 15,
+                                      offset: const Offset(0, -3),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(22),
+                                  child: Image.asset(
+                                    'assets/images/logo.jpeg',
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                    height: double.infinity,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              Text(
+                                'Maybe she\'s born with it.\nMaybe it\'s Kebabaline',
+                                style: theme.textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.black87,
+                                  height: 1.3,
+                                  letterSpacing: -0.8,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 16),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      AppConstants.accentColor.withOpacity(
+                                        0.15,
+                                      ),
+                                      AppConstants.accentColor.withOpacity(
+                                        0.08,
+                                      ),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(25),
+                                  border: Border.all(
+                                    color: AppConstants.accentColor.withOpacity(
+                                      0.3,
+                                    ),
+                                    width: 1,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppConstants.accentColor
+                                          .withOpacity(0.1),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Text(
+                                  'Let the Games Begin',
+                                  style: theme.textTheme.bodyLarge?.copyWith(
+                                    color: AppConstants.accentColor,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.5,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Component Selectors
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      sliver: SliverList(
+                        delegate: SliverChildListDelegate([
+                          const SizedBox(height: 16),
+                          _buildSectionCard(
+                            child: ComponentSelector(
+                              type: ComponentType.bread,
+                              components: provider.breadOptions,
+                              selected: provider.selectedBread,
+                              onSelectionChanged: (breadId) {
+                                provider.selectBread(breadId);
+                              },
+                              allowMultiple: false,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          _buildSectionCard(
+                            child: ComponentSelector(
+                              type: ComponentType.meat,
+                              components: provider.meatOptions,
+                              selected: provider.selectedMeats,
+                              onSelectionChanged: (meatId) {
+                                provider.toggleMeat(meatId);
+                              },
+                              allowMultiple: true,
+                              maxSelections: 2,
+                              errorMessage:
+                                  provider.selectedMeats.isEmpty &&
+                                      provider.hasSelections
+                                  ? 'Select at least one meat'
+                                  : provider.selectedMeats.length > 2
+                                  ? 'Maximum 2 meats allowed'
+                                  : null,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          _buildSectionCard(
+                            child: ComponentSelector(
+                              type: ComponentType.salad,
+                              components: provider.saladOptions,
+                              selected: provider.selectedSalads,
+                              onSelectionChanged: (saladId) {
+                                provider.toggleSalad(saladId);
+                              },
+                              allowMultiple: true,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          _buildSectionCard(
+                            child: ComponentSelector(
+                              type: ComponentType.sauce,
+                              components: provider.sauceOptions,
+                              selected: provider.selectedSauces,
+                              onSelectionChanged: (sauceId) {
+                                provider.toggleSauce(sauceId);
+                              },
+                              allowMultiple: true,
+                              maxSelections: AppConstants.maxSauces,
+                              errorMessage:
+                                  provider.selectedSauces.length >
+                                      AppConstants.maxSauces
+                                  ? 'Maximum ${AppConstants.maxSauces} sauces allowed'
+                                  : null,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          _buildSectionCard(
+                            child: WeightSlider(
+                              weight: provider.kebabWeight,
+                              onWeightChanged: (weight) {
+                                provider.updateWeight(weight);
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                        ]),
+                      ),
+                    ),
+
+                    // Nutrition Display
+                    if (provider.hasValidSelections) ...[
+                      SliverToBoxAdapter(
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 16),
+                          child: NutritionDisplay(
+                            totalNutrition: provider.totalNutrition,
+                            nutritionByType: provider.nutritionByType,
+                            isValid: provider.hasValidSelections,
+                          ),
+                        ),
+                      ),
+                      const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                    ],
+
+                    // Calculate Button (if no valid selections)
+                    if (!provider.hasValidSelections) ...[
+                      SliverToBoxAdapter(
+                        child: Container(
+                          margin: const EdgeInsets.fromLTRB(16, 20, 16, 32),
+                          child: _buildCalculateButton(context, provider),
+                        ),
+                      ),
+                    ],
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -71,510 +455,164 @@ class _CalculatorScreenState extends State<CalculatorScreen>
     );
   }
 
-  Widget _buildModernAppBar(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: AppConstants.cardColor,
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => Navigator.pop(context),
-                borderRadius: BorderRadius.circular(14),
-                child: const Icon(
-                  Icons.arrow_back_ios_new,
-                  size: 18,
-                  color: AppConstants.textColor,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppConstants.gradientStart, AppConstants.gradientEnd],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: AppConstants.accentColor.withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: const Center(
-              child: Text('🧮', style: TextStyle(fontSize: 20)),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Kebab Calculator',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: AppConstants.textColor,
-                    fontSize: 22,
-                  ),
-                ),
-                Text(
-                  'Build your perfect kebab',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppConstants.secondaryTextColor,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildKebabBuilderCard() {
+  Widget _buildSectionCard({required Widget child}) {
     return Container(
       decoration: BoxDecoration(
-        color: AppConstants.cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withOpacity(0.06),
             blurRadius: 20,
             offset: const Offset(0, 8),
+            spreadRadius: -4,
+          ),
+          BoxShadow(
+            color: Colors.white.withOpacity(0.8),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
           ),
         ],
       ),
-      child: Column(
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppConstants.gradientStart, AppConstants.gradientEnd],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: const Center(
-                    child: Text('🥙', style: TextStyle(fontSize: 24)),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Build Your Kebab',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      Text(
-                        'Select your favorite ingredients',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.9),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Ingredients
-          Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              children: [
-                _buildIngredientSection(
-                  'Bread Base',
-                  'bread',
-                  Icons.bakery_dining_outlined,
-                  AppConstants.goldAccent,
-                  false,
-                ),
-                const SizedBox(height: 16),
-                _buildIngredientSection(
-                  'Protein Choice',
-                  'meat',
-                  Icons.restaurant_outlined,
-                  AppConstants.accentColor,
-                  false,
-                ),
-                const SizedBox(height: 16),
-                _buildIngredientSection(
-                  'Fresh Salads',
-                  'salad',
-                  Icons.eco_outlined,
-                  const Color(0xFF38A169),
-                  true,
-                ),
-                const SizedBox(height: 16),
-                _buildIngredientSection(
-                  'Signature Sauces',
-                  'sauce',
-                  Icons.water_drop_outlined,
-                  const Color(0xFF3182CE),
-                  true,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      child: child,
     );
   }
 
-  Widget _buildIngredientSection(
-    String title,
-    String category,
-    IconData icon,
-    Color color,
-    bool isMultiSelect,
+  Widget _buildCalculateButton(
+    BuildContext context,
+    CalculatorProvider provider,
   ) {
-    return Consumer<CalculatorProvider>(
-      builder: (context, provider, child) {
-        // Get selection count for dynamic header
-        int selectionCount = 0;
-        if (category == 'salad') {
-          selectionCount = provider.selectedSalads.length;
-        } else if (category == 'sauce') {
-          selectionCount = provider.selectedSauces.length;
-        } else if (category == 'bread') {
-          selectionCount = provider.selectedBread != null ? 1 : 0;
-        } else if (category == 'meat') {
-          selectionCount = provider.selectedMeat != null ? 1 : 0;
-        }
+    final theme = Theme.of(context);
+    final hasMinimumSelections = provider.selectedBread != null;
 
-        return Container(
-          decoration: BoxDecoration(
-            color: AppConstants.surfaceColor,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: selectionCount > 0
-                  ? color.withValues(alpha: 0.3)
-                  : AppConstants.borderColor,
-              width: selectionCount > 0 ? 2 : 1,
-            ),
-          ),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(icon, color: color, size: 20),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Fixed Row with proper wrapping
-                          Row(
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  title,
-                                  style: Theme.of(context).textTheme.titleMedium
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        color: AppConstants.textColor,
-                                      ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              if (selectionCount > 0) ...[
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: color,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    '$selectionCount',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                          // Status text on new line to prevent overflow
-                          if (category == 'sauce' &&
-                              !provider.canSelectMoreSauces)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                'Maximum reached',
-                                style: TextStyle(
-                                  color: color,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    // Multi-select badge with constrained width
-                    if (isMultiSelect)
-                      Container(
-                        constraints: const BoxConstraints(maxWidth: 60),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.check_circle_outline,
-                              size: 12,
-                              color: color,
-                            ),
-                            const SizedBox(width: 2),
-                            Flexible(
-                              child: Text(
-                                'Multi',
-                                style: TextStyle(
-                                  color: color,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                child: ComponentSelector(
-                  title: '',
-                  category: category,
-                  isMultiSelect: isMultiSelect,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildWeightAndNutritionRow() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWide = constraints.maxWidth > 768;
-
-        if (isWide) {
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: _buildWeightCard()),
-              const SizedBox(width: 20),
-              Expanded(child: _buildNutritionCard()),
-            ],
-          );
-        } else {
-          return Column(
-            children: [
-              _buildWeightCard(),
-              const SizedBox(height: 20),
-              _buildNutritionCard(),
-            ],
-          );
-        }
-      },
-    );
-  }
-
-  Widget _buildWeightCard() {
     return Container(
-      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppConstants.cardColor,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppConstants.goldAccent.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.scale_outlined,
-                  color: AppConstants.goldAccent,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Weight Settings',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppConstants.textColor,
-                      ),
-                    ),
-                    Text(
-                      'Adjust serving size',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppConstants.secondaryTextColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          const WeightSlider(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNutritionCard() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppConstants.gradientStart, AppConstants.gradientEnd],
+        gradient: LinearGradient(
+          colors: hasMinimumSelections
+              ? [AppConstants.accentColor, AppConstants.secondaryAccent]
+              : [Colors.grey.shade400, Colors.grey.shade500],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: AppConstants.accentColor.withValues(alpha: 0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
+        boxShadow: hasMinimumSelections
+            ? [
+                BoxShadow(
+                  color: AppConstants.accentColor.withOpacity(0.4),
+                  blurRadius: 25,
+                  offset: const Offset(0, 12),
+                  spreadRadius: -5,
                 ),
-                child: const Icon(
-                  Icons.analytics_outlined,
+                BoxShadow(
+                  color: Colors.white.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, -2),
+                ),
+              ]
+            : [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.3),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: hasMinimumSelections ? _scrollToNutrition : null,
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  hasMinimumSelections
+                      ? Icons.calculate_rounded
+                      : Icons.info_outline,
                   color: Colors.white,
-                  size: 20,
+                  size: 26,
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Nutrition Analysis',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Text(
-                      'Detailed breakdown',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.9),
-                      ),
-                    ),
-                  ],
+                const SizedBox(width: 14),
+                Text(
+                  hasMinimumSelections
+                      ? 'Calculate Nutrition'
+                      : 'Select bread to continue',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 20),
-          const NutritionDisplay(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildClearDialog(BuildContext context, CalculatorProvider provider) {
+    final theme = Theme.of(context);
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      backgroundColor: Colors.white,
+      elevation: 20,
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppConstants.accentColor.withOpacity(0.15),
+                  AppConstants.accentColor.withOpacity(0.08),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.refresh_rounded,
+              color: AppConstants.accentColor,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 14),
+          const Text('Clear All Selections'),
         ],
       ),
+      content: const Text(
+        'Are you sure you want to clear all your selections and start over?',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          child: Text('Cancel', style: TextStyle(color: Colors.grey.shade600)),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            provider.clearAllSelections();
+            Navigator.of(context).pop();
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppConstants.accentColor,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            elevation: 5,
+          ),
+          child: const Text('Clear All'),
+        ),
+      ],
     );
   }
 }

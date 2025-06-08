@@ -1,53 +1,280 @@
+import 'kebab_component.dart';
+
 class NutritionData {
-  final double calories;
-  final double protein;
-  final double carbohydrates;
-  final double fat;
-  final double fiber;
-  final double sugar;
-  final double sodium;
+  // BREAD COMPONENTS - From Excel data (per 100g) with exact values
+  static const List<KebabComponent> breadOptions = [
+    KebabComponent(
+      id: 'greek',
+      name: 'GREEK',
+      type: ComponentType.bread,
+      calories: 253.3460803,
+      protein: 8.2,
+      carbohydrates: 49.8,
+      fat: 1.4,
+      saturatedFat: 0.4,
+      sugar: 3.2,
+      sodium: 708,
+      defaultGrams: 98,
+    ),
+    KebabComponent(
+      id: 'lebanese',
+      name: 'LEBANESE',
+      type: ComponentType.bread,
+      calories: 296.3671128,
+      protein: 9.5,
+      carbohydrates: 58.1,
+      fat: 2.0,
+      saturatedFat: 0.5,
+      sugar: 3.5,
+      sodium: 500,
+      defaultGrams: 80,
+    ),
+    KebabComponent(
+      id: 'turkish',
+      name: 'TURKISH',
+      type: ComponentType.bread,
+      calories: 260.5162524,
+      protein: 9.3,
+      carbohydrates: 46.3,
+      fat: 3.1,
+      saturatedFat: 1.0,
+      sugar: 3.3,
+      sodium: 410,
+      defaultGrams: 100,
+    ),
+  ];
 
-  const NutritionData({
-    required this.calories,
-    required this.protein,
-    required this.carbohydrates,
-    required this.fat,
-    required this.fiber,
-    required this.sugar,
-    required this.sodium,
-  });
+  // MEAT COMPONENTS - From Excel data (per 100g) with exact values
+  static const List<KebabComponent> meatOptions = [
+    KebabComponent(
+      id: 'lamb',
+      name: 'LAMB',
+      type: ComponentType.meat,
+      calories: 320.2676864,
+      protein: 18.2,
+      carbohydrates: 11.4,
+      fat: 22.5,
+      saturatedFat: 11.4,
+      sugar: 3.6,
+      sodium: 931,
+      defaultGrams: 175,
+    ),
+    KebabComponent(
+      id: 'chicken',
+      name: 'CHICKEN',
+      type: ComponentType.meat,
+      calories: 221.0803059,
+      protein: 28.3,
+      carbohydrates: 3.3,
+      fat: 10.5,
+      saturatedFat: 3.4,
+      sugar: 0.1,
+      sodium: 56,
+      defaultGrams: 170,
+    ),
+    KebabComponent(
+      id: 'beef',
+      name: 'BEEF',
+      type: ComponentType.meat,
+      calories: 303.5372849,
+      protein: 29.5,
+      carbohydrates: 0.9,
+      fat: 20.3,
+      saturatedFat: 10.5,
+      sugar: 0.1,
+      sodium: 710,
+      defaultGrams: 187,
+    ),
+  ];
 
-  NutritionData operator +(NutritionData other) {
-    return NutritionData(
-      calories: calories + other.calories,
-      protein: protein + other.protein,
-      carbohydrates: carbohydrates + other.carbohydrates,
-      fat: fat + other.fat,
-      fiber: fiber + other.fiber,
-      sugar: sugar + other.sugar,
-      sodium: sodium + other.sodium,
-    );
+  // SALAD COMPONENTS ("OTHERS") - From Excel data (per 100g) with exact values
+  static const List<KebabComponent> saladOptions = [
+    KebabComponent(
+      id: 'lettuce',
+      name: 'LETTUCE',
+      type: ComponentType.salad,
+      calories: 19.59847036,
+      protein: 1.4,
+      carbohydrates: 1.8,
+      fat: 0.3,
+      saturatedFat: 0.1,
+      sugar: 1.8,
+      sodium: 18,
+      defaultGrams: 50,
+    ),
+    KebabComponent(
+      id: 'tomato_fresh',
+      name: 'TOMATO',
+      type: ComponentType.salad,
+      calories: 18.64244742,
+      protein: 1.0,
+      carbohydrates: 2.4,
+      fat: 0.1,
+      saturatedFat: 0.0,
+      sugar: 2.3,
+      sodium: 8,
+      defaultGrams: 47,
+    ),
+    KebabComponent(
+      id: 'onion',
+      name: 'ONION',
+      type: ComponentType.salad,
+      calories: 32.74378585,
+      protein: 1.7,
+      carbohydrates: 4.8,
+      fat: 0.1,
+      saturatedFat: 0.0,
+      sugar: 4.8,
+      sodium: 14,
+      defaultGrams: 40,
+    ),
+    KebabComponent(
+      id: 'tabouli',
+      name: 'TABOULI',
+      type: ComponentType.salad,
+      calories: 24.37858509,
+      protein: 2.4,
+      carbohydrates: 0.6,
+      fat: 0.2,
+      saturatedFat: 0.0,
+      sugar: 0.6,
+      sodium: 58,
+      defaultGrams: 31,
+    ),
+    KebabComponent(
+      id: 'cheese',
+      name: 'CHEESE',
+      type: ComponentType.salad,
+      calories: 396.9885277,
+      protein: 24.6,
+      carbohydrates: 0.5,
+      fat: 32.8,
+      saturatedFat: 21.6,
+      sugar: 0.4,
+      sodium: 684,
+      defaultGrams: 55,
+    ),
+  ];
+
+  // SAUCE COMPONENTS - From Excel data (per 100g) with exact values
+  static const List<KebabComponent> sauceOptions = [
+    KebabComponent(
+      id: 'chilli',
+      name: 'CHILLI',
+      type: ComponentType.sauce,
+      calories: 90.34416826,
+      protein: 1.8,
+      carbohydrates: 14.7,
+      fat: 2.3,
+      saturatedFat: 0.3,
+      sugar: 8.4,
+      sodium: 981,
+      defaultGrams: 21,
+    ),
+    KebabComponent(
+      id: 'bbq',
+      name: 'BBQ',
+      type: ComponentType.sauce,
+      calories: 210.3250478,
+      protein: 0.5,
+      carbohydrates: 50.5,
+      fat: 0.1,
+      saturatedFat: 0.0,
+      sugar: 44.1,
+      sodium: 1021,
+      defaultGrams: 28,
+    ),
+    KebabComponent(
+      id: 'garlic',
+      name: 'GARLIC',
+      type: ComponentType.sauce,
+      calories: 98.94837476,
+      protein: 5.1,
+      carbohydrates: 8.3,
+      fat: 5.0,
+      saturatedFat: 3.4,
+      sugar: 8.3,
+      sodium: 60,
+      defaultGrams: 27,
+    ),
+    KebabComponent(
+      id: 'hummus',
+      name: 'HOMMUS',
+      type: ComponentType.sauce,
+      calories: 250.9560229,
+      protein: 7.9,
+      carbohydrates: 9.3,
+      fat: 18.1,
+      saturatedFat: 2.0,
+      sugar: 1.0,
+      sodium: 535,
+      defaultGrams: 30,
+    ),
+    KebabComponent(
+      id: 'tomato_sauce',
+      name: 'TOMATO',
+      type: ComponentType.sauce,
+      calories: 112.332696,
+      protein: 1.4,
+      carbohydrates: 25.0,
+      fat: 0.2,
+      saturatedFat: 0.0,
+      sugar: 24.5,
+      sodium: 673,
+      defaultGrams: 30,
+    ),
+    KebabComponent(
+      id: 'mayonnaise',
+      name: 'MAYONNAISE',
+      type: ComponentType.sauce,
+      calories: 698.8527725,
+      protein: 1.9,
+      carbohydrates: 1.5,
+      fat: 77.4,
+      saturatedFat: 5.7,
+      sugar: 1.1,
+      sodium: 511.2,
+      defaultGrams: 27,
+    ),
+    KebabComponent(
+      id: 'sweet_chilli',
+      name: 'SWEET CHILLI',
+      type: ComponentType.sauce,
+      calories: 249.7609943,
+      protein: 0.2,
+      carbohydrates: 60.8,
+      fat: 0.0,
+      saturatedFat: 0.0,
+      sugar: 54.3,
+      sodium: 1648,
+      defaultGrams: 24,
+    ),
+    KebabComponent(
+      id: 'sour_cream',
+      name: 'SOUR CREAM',
+      type: ComponentType.sauce,
+      calories: 348.9483748,
+      protein: 1.9,
+      carbohydrates: 3.7,
+      fat: 37.0,
+      saturatedFat: 24.7,
+      sugar: 3.7,
+      sodium: 37,
+      defaultGrams: 25,
+    ),
+  ];
+
+  static KebabComponent? getComponentById(String id) {
+    final allComponents = [
+      ...breadOptions,
+      ...meatOptions,
+      ...saladOptions,
+      ...sauceOptions,
+    ];
+    try {
+      return allComponents.firstWhere((component) => component.id == id);
+    } catch (e) {
+      return null;
+    }
   }
-
-  NutritionData operator *(double multiplier) {
-    return NutritionData(
-      calories: calories * multiplier,
-      protein: protein * multiplier,
-      carbohydrates: carbohydrates * multiplier,
-      fat: fat * multiplier,
-      fiber: fiber * multiplier,
-      sugar: sugar * multiplier,
-      sodium: sodium * multiplier,
-    );
-  }
-
-  static const NutritionData zero = NutritionData(
-    calories: 0,
-    protein: 0,
-    carbohydrates: 0,
-    fat: 0,
-    fiber: 0,
-    sugar: 0,
-    sodium: 0,
-  );
 }

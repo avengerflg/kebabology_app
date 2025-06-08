@@ -1,5 +1,5 @@
-name: kebabology_app
-description: "Kebab calorie counter app."
+name: kebabologist_app
+description: "Kebabologist - Track nutrition & make informed choices for your kebabs."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 
@@ -15,7 +15,7 @@ description: "Kebab calorie counter app."
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+1
+version: 1.0.4+5
 
 ios_bundle_identifier: com.oktay.kebabology
 
@@ -35,6 +35,10 @@ dependencies:
   provider: ^6.1.2
   flutter_native_splash: ^2.3.10
   flutter_launcher_icons: ^0.13.1
+  url_launcher: ^6.3.1
+  font_awesome_flutter: ^10.8.0
+  equatable: ^2.0.7
+  flutter_bloc: ^9.1.1
 
 dev_dependencies:
   flutter_test:
@@ -55,7 +59,10 @@ flutter:
   assets:
     - assets/images/bg.jpeg
     - assets/images/logo.jpeg
+    - assets/images/australia_shape.png
+    - assets/images/icon.png
     - assets/icons/
+    - assets/fonts/Inter_18pt-Regular.ttf
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -68,17 +75,16 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter_18pt-Regular.ttf
+        - asset: assets/fonts/Inter_18pt-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter_18pt-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter_18pt-Bold.ttf
+          weight: 700
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package

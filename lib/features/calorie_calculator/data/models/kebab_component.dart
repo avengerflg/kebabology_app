@@ -1,58 +1,48 @@
+// lib/features/calorie_calculator/data/models/kebab_component.dart
+
 class KebabComponent {
+  final String id;
   final String name;
+  final ComponentType type;
   final double calories;
   final double protein;
   final double carbohydrates;
   final double fat;
+  final double saturatedFat;
   final double fiber;
   final double sugar;
   final double sodium;
-  final String category;
+  final double defaultGrams;
 
   const KebabComponent({
+    required this.id,
     required this.name,
+    required this.type,
     required this.calories,
     required this.protein,
     required this.carbohydrates,
-    required this.fat,
-    required this.fiber,
-    required this.sugar,
-    required this.sodium,
-    required this.category,
+    this.fat = 0,
+    this.saturatedFat = 0,
+    this.fiber = 0,
+    this.sugar = 0,
+    this.sodium = 0,
+    required this.defaultGrams,
   });
+}
 
-  KebabComponent copyWith({
-    String? name,
-    double? calories,
-    double? protein,
-    double? carbohydrates,
-    double? fat,
-    double? fiber,
-    double? sugar,
-    double? sodium,
-    String? category,
-  }) {
-    return KebabComponent(
-      name: name ?? this.name,
-      calories: calories ?? this.calories,
-      protein: protein ?? this.protein,
-      carbohydrates: carbohydrates ?? this.carbohydrates,
-      fat: fat ?? this.fat,
-      fiber: fiber ?? this.fiber,
-      sugar: sugar ?? this.sugar,
-      sodium: sodium ?? this.sodium,
-      category: category ?? this.category,
-    );
+enum ComponentType { bread, meat, salad, sauce }
+
+extension ComponentTypeExtension on ComponentType {
+  String get displayName {
+    switch (this) {
+      case ComponentType.bread:
+        return 'Bread';
+      case ComponentType.meat:
+        return 'Meat';
+      case ComponentType.salad:
+        return 'Salad';
+      case ComponentType.sauce:
+        return 'Sauce';
+    }
   }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is KebabComponent &&
-        other.name == name &&
-        other.category == category;
-  }
-
-  @override
-  int get hashCode => name.hashCode ^ category.hashCode;
 }

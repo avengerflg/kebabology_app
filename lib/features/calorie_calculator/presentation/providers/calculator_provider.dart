@@ -1,100 +1,119 @@
 import 'package:flutter/foundation.dart';
-import 'package:kebabology_app/core/constants/app_constants.dart';
-import 'package:kebabology_app/core/utils/calculations.dart';
-import 'package:kebabology_app/features/calorie_calculator/data/models/kebab_component.dart';
-import 'package:kebabology_app/features/calorie_calculator/data/models/nutrition_data.dart';
-import 'package:kebabology_app/features/calorie_calculator/data/repositories/kebab_repository.dart';
-import 'package:kebabology_app/features/calorie_calculator/data/repositories/nutrition_repository.dart';
+import '../../data/models/kebab_component.dart';
+import '../../data/repositories/kebab_repository.dart';
+import '../../data/repositories/nutrition_repository.dart';
+import '../../../../core/constants/app_constants.dart';
 
 class CalculatorProvider extends ChangeNotifier {
   final KebabRepository _kebabRepository = KebabRepository();
   final NutritionRepository _nutritionRepository = NutritionRepository();
 
-  // Selected components
-  KebabComponent? _selectedBread;
-  KebabComponent? _selectedMeat;
-  final List<KebabComponent> _selectedSalads = [];
-  final List<KebabComponent> _selectedSauces = [];
+  String? _selectedBread;
+  final List<String> _selectedMeats = [];
+  final List<String> _selectedSalads = [];
+  final List<String> _selectedSauces = [];
+  double _kebabWeight = AppConstants.standardKebabWeight;
 
-  // Weight
-  double _weight = AppConstants.standardKebabWeight;
+  String? get selectedBread => _selectedBread;
+  List<String> get selectedMeats => List.unmodifiable(_selectedMeats);
+  List<String> get selectedSalads => List.unmodifiable(_selectedSalads);
+  List<String> get selectedSauces => List.unmodifiable(_selectedSauces);
+  double get kebabWeight => _kebabWeight;
 
-  // Getters
-  KebabComponent? get selectedBread => _selectedBread;
-  KebabComponent? get selectedMeat => _selectedMeat;
-  List<KebabComponent> get selectedSalads => List.unmodifiable(_selectedSalads);
-  List<KebabComponent> get selectedSauces => List.unmodifiable(_selectedSauces);
-  double get weight => _weight;
+  List<KebabComponent> get breadOptions => _kebabRepository.getBreadOptions();
+  List<KebabComponent> get meatOptions => _kebabRepository.getMeatOptions();
+  List<KebabComponent> get saladOptions => _kebabRepository.getSaladOptions();
+  List<KebabComponent> get sauceOptions => _kebabRepository.getSauceOptions();
 
-  // Repository getters
-  List<KebabComponent> get breads => _kebabRepository.getBreads();
-  List<KebabComponent> get meats => _kebabRepository.getMeats();
-  List<KebabComponent> get salads => _kebabRepository.getSalads();
-  List<KebabComponent> get sauces => _kebabRepository.getSauces();
+  List<KebabComponent> get _allComponentsList => [
+    ...breadOptions,
+    ...meatOptions,
+    ...saladOptions,
+    ...sauceOptions,
+  ];
 
-  // Nutrition calculation
-  NutritionData get totalNutrition {
-    return _nutritionRepository.calculateTotalNutrition(
+  void selectBread(String? breadId) {
+    _selectedBread = breadId;
+    notifyListeners();
+  }
+
+  void toggleMeat(String meatId) {
+    if (_selectedMeats.contains(meatId)) {
+      _selectedMeats.remove(meatId);
+    } else if (_selectedMeats.length < 2) {
+      _selectedMeats.add(meatId);
+    }
+    notifyListeners();
+  }
+
+  void toggleSalad(String saladId) {
+    if (_selectedSalads.contains(saladId)) {
+      _selectedSalads.remove(saladId);
+    } else if (_selectedSalads.length < 5) {
+      _selectedSalads.add(saladId);
+    }
+    notifyListeners();
+  }
+
+  void toggleSauce(String sauceId) {
+    if (_selectedSauces.contains(sauceId)) {
+      _selectedSauces.remove(sauceId);
+    } else if (_selectedSauces.length < AppConstants.maxSauces) {
+      _selectedSauces.add(sauceId);
+    }
+    notifyListeners();
+  }
+
+  void updateWeight(double weight) {
+    _kebabWeight = weight;
+    notifyListeners();
+  }
+
+  bool get hasValidSelections =>
+      _selectedBread != null &&
+      _kebabRepository.isValidKebab(
+        selectedMeats: _selectedMeats,
+        selectedSalads: _selectedSalads,
+        selectedSauces: _selectedSauces,
+      );
+
+  Map<ComponentType, Map<String, double>> get nutritionByType {
+    return _nutritionRepository.calculateNutritionByType(
       selectedBread: _selectedBread,
-      selectedMeat: _selectedMeat,
+      selectedMeats: _selectedMeats,
       selectedSalads: _selectedSalads,
       selectedSauces: _selectedSauces,
-      weight: _weight,
+      kebabWeight: _kebabWeight,
+      allComponents: _allComponentsList,
     );
   }
 
-  // Selection methods
-  void selectBread(KebabComponent bread) {
-    _selectedBread = bread;
-    notifyListeners();
+  Map<String, double> get totalNutrition {
+    return _nutritionRepository.calculateTotalNutrition(
+      nutritionByType: nutritionByType,
+    );
   }
 
-  void selectMeat(KebabComponent meat) {
-    _selectedMeat = meat;
-    notifyListeners();
-  }
+  bool get hasSelections =>
+      _selectedBread != null ||
+      _selectedMeats.isNotEmpty ||
+      _selectedSalads.isNotEmpty ||
+      _selectedSauces.isNotEmpty;
 
-  void toggleSalad(KebabComponent salad) {
-    if (_selectedSalads.contains(salad)) {
-      _selectedSalads.remove(salad);
-    } else {
-      _selectedSalads.add(salad);
-    }
-    notifyListeners();
-  }
-
-  void toggleSauce(KebabComponent sauce) {
-    if (_selectedSauces.contains(sauce)) {
-      _selectedSauces.remove(sauce);
-    } else if (_selectedSauces.length < AppConstants.maxSauces) {
-      _selectedSauces.add(sauce);
-    }
-    notifyListeners();
-  }
-
-  void updateWeight(double newWeight) {
-    _weight = newWeight;
-    notifyListeners();
-  }
-
-  void reset() {
+  void clearAllSelections() {
     _selectedBread = null;
-    _selectedMeat = null;
+    _selectedMeats.clear();
     _selectedSalads.clear();
     _selectedSauces.clear();
-    _weight = AppConstants.standardKebabWeight;
+    _kebabWeight = AppConstants.standardKebabWeight;
     notifyListeners();
   }
 
-  bool get canSelectMoreSauces =>
-      _selectedSauces.length < AppConstants.maxSauces;
-
-  // Helper methods for UI text
-  String getSaladSelectionText() {
-    return CalculationUtils.getSaladSelectionText(_selectedSalads.length);
+  KebabComponent? getComponentById(String id) {
+    return _kebabRepository.getComponentById(id);
   }
 
-  String getSauceSelectionText() {
-    return CalculationUtils.getSauceSelectionText(_selectedSauces.length);
+  String formatNutritionValue(double value, String nutrient) {
+    return _nutritionRepository.formatNutritionValue(value, nutrient);
   }
 }
