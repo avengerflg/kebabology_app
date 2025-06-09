@@ -59,8 +59,7 @@ class NutritionRepository {
       return finalNutrition;
     }
 
-    final get = (String id) =>
-        allComponents.firstWhere((comp) => comp.id == id);
+    get(String id) => allComponents.firstWhere((comp) => comp.id == id);
 
     // Calculate weight factor for scaling
     final double weightFactor = kebabWeight / _baseWeight;
@@ -139,11 +138,11 @@ class NutritionRepository {
     required Map<ComponentType, Map<String, double>> nutritionByType,
   }) {
     final totalNutrition = initializeNutritionMap();
-    nutritionByType.values.forEach((typeNutrition) {
+    for (var typeNutrition in nutritionByType.values) {
       typeNutrition.forEach((key, value) {
         totalNutrition[key] = totalNutrition[key]! + value;
       });
-    });
+    }
     return totalNutrition;
   }
 

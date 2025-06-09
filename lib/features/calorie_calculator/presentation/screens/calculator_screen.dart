@@ -68,7 +68,6 @@ class _CalculatorScreenState extends State<CalculatorScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final size = MediaQuery.of(context).size;
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
@@ -92,12 +91,12 @@ class _CalculatorScreenState extends State<CalculatorScreen>
               end: Alignment.bottomRight,
               colors: [
                 AppConstants.accentColor,
-                AppConstants.accentColor.withOpacity(0.9),
+                AppConstants.accentColor.withValues(alpha: 0.9),
               ],
             ),
             boxShadow: [
               BoxShadow(
-                color: AppConstants.accentColor.withOpacity(0.3),
+                color: AppConstants.accentColor.withValues(alpha: 0.3),
                 blurRadius: 20,
                 offset: const Offset(0, 5),
               ),
@@ -107,7 +106,7 @@ class _CalculatorScreenState extends State<CalculatorScreen>
         leading: Container(
           margin: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(12),
           ),
           child: IconButton(
@@ -127,7 +126,7 @@ class _CalculatorScreenState extends State<CalculatorScreen>
               return Container(
                 margin: const EdgeInsets.only(right: 12, top: 8, bottom: 8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: IconButton(
@@ -159,7 +158,7 @@ class _CalculatorScreenState extends State<CalculatorScreen>
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  AppConstants.accentColor.withOpacity(0.08),
+                  AppConstants.accentColor.withValues(alpha: 0.08),
                   Colors.grey.shade50,
                   Colors.white,
                 ],
@@ -197,33 +196,33 @@ class _CalculatorScreenState extends State<CalculatorScreen>
                               end: Alignment.bottomRight,
                               colors: [
                                 Colors.white,
-                                Colors.grey.shade50.withOpacity(0.8),
-                                Colors.white.withOpacity(0.95),
+                                Colors.grey.shade50.withValues(alpha: 0.8),
+                                Colors.white.withValues(alpha: 0.95),
                               ],
                               stops: const [0.0, 0.5, 1.0],
                             ),
                             borderRadius: BorderRadius.circular(28),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.6),
+                              color: Colors.white.withValues(alpha: 0.6),
                               width: 1.5,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: AppConstants.accentColor.withOpacity(
-                                  0.15,
+                                color: AppConstants.accentColor.withValues(
+                                  alpha: 0.15,
                                 ),
                                 blurRadius: 35,
                                 offset: const Offset(0, 12),
                                 spreadRadius: -8,
                               ),
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.08),
+                                color: Colors.black.withValues(alpha: 0.08),
                                 blurRadius: 25,
                                 offset: const Offset(0, 8),
                                 spreadRadius: -5,
                               ),
                               BoxShadow(
-                                color: Colors.white.withOpacity(0.7),
+                                color: Colors.white.withValues(alpha: 0.7),
                                 blurRadius: 15,
                                 offset: const Offset(0, -2),
                               ),
@@ -240,27 +239,29 @@ class _CalculatorScreenState extends State<CalculatorScreen>
                                     end: Alignment.bottomRight,
                                     colors: [
                                       Colors.white,
-                                      AppConstants.surfaceColor.withOpacity(
-                                        0.3,
+                                      AppConstants.surfaceColor.withValues(
+                                        alpha: 0.3,
                                       ),
                                     ],
                                   ),
                                   borderRadius: BorderRadius.circular(24),
                                   border: Border.all(
-                                    color: AppConstants.accentColor.withOpacity(
-                                      0.2,
+                                    color: AppConstants.accentColor.withValues(
+                                      alpha: 0.2,
                                     ),
                                     width: 2,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
                                       color: AppConstants.accentColor
-                                          .withOpacity(0.2),
+                                          .withValues(alpha: 0.2),
                                       blurRadius: 20,
                                       offset: const Offset(0, 8),
                                     ),
                                     BoxShadow(
-                                      color: Colors.white.withOpacity(0.9),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.9,
+                                      ),
                                       blurRadius: 15,
                                       offset: const Offset(0, -3),
                                     ),
@@ -296,25 +297,25 @@ class _CalculatorScreenState extends State<CalculatorScreen>
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     colors: [
-                                      AppConstants.accentColor.withOpacity(
-                                        0.15,
+                                      AppConstants.accentColor.withValues(
+                                        alpha: 0.15,
                                       ),
-                                      AppConstants.accentColor.withOpacity(
-                                        0.08,
+                                      AppConstants.accentColor.withValues(
+                                        alpha: 0.08,
                                       ),
                                     ],
                                   ),
                                   borderRadius: BorderRadius.circular(25),
                                   border: Border.all(
-                                    color: AppConstants.accentColor.withOpacity(
-                                      0.3,
+                                    color: AppConstants.accentColor.withValues(
+                                      alpha: 0.3,
                                     ),
                                     width: 1,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
                                       color: AppConstants.accentColor
-                                          .withOpacity(0.1),
+                                          .withValues(alpha: 0.1),
                                       blurRadius: 10,
                                       offset: const Offset(0, 4),
                                     ),
@@ -461,13 +462,13 @@ class _CalculatorScreenState extends State<CalculatorScreen>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 20,
             offset: const Offset(0, 8),
             spreadRadius: -4,
           ),
           BoxShadow(
-            color: Colors.white.withOpacity(0.8),
+            color: Colors.white.withValues(alpha: 0.8),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -497,20 +498,20 @@ class _CalculatorScreenState extends State<CalculatorScreen>
         boxShadow: hasMinimumSelections
             ? [
                 BoxShadow(
-                  color: AppConstants.accentColor.withOpacity(0.4),
+                  color: AppConstants.accentColor.withValues(alpha: 0.4),
                   blurRadius: 25,
                   offset: const Offset(0, 12),
                   spreadRadius: -5,
                 ),
                 BoxShadow(
-                  color: Colors.white.withOpacity(0.3),
+                  color: Colors.white.withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, -2),
                 ),
               ]
             : [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.3),
+                  color: Colors.grey.withValues(alpha: 0.3),
                   blurRadius: 15,
                   offset: const Offset(0, 8),
                 ),
@@ -553,8 +554,6 @@ class _CalculatorScreenState extends State<CalculatorScreen>
   }
 
   Widget _buildClearDialog(BuildContext context, CalculatorProvider provider) {
-    final theme = Theme.of(context);
-
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       backgroundColor: Colors.white,
@@ -566,8 +565,8 @@ class _CalculatorScreenState extends State<CalculatorScreen>
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppConstants.accentColor.withOpacity(0.15),
-                  AppConstants.accentColor.withOpacity(0.08),
+                  AppConstants.accentColor.withValues(alpha: 0.15),
+                  AppConstants.accentColor.withValues(alpha: 0.08),
                 ],
               ),
               borderRadius: BorderRadius.circular(12),

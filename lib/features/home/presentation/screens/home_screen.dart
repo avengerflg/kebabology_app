@@ -19,10 +19,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late AnimationController _cardAnimationController;
   late Animation<double> _headerAnimation;
   late Animation<double> _cardAnimation;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    _initializeAnimations();
+  }
+
+  void _initializeAnimations() {
     _headerAnimationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
@@ -43,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     _headerAnimationController.forward();
     Future.delayed(const Duration(milliseconds: 300), () {
-      _cardAnimationController.forward();
+      if (mounted) _cardAnimationController.forward();
     });
   }
 
@@ -52,6 +57,105 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _headerAnimationController.dispose();
     _cardAnimationController.dispose();
     super.dispose();
+  }
+
+  Future<void> _launchUrl(String url, String platform) async {
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final Uri uri = Uri.parse(url);
+
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+
+        if (mounted) {
+          _showSuccessSnackBar('Opening $platform...');
+        }
+      } else {
+        throw Exception('Could not launch $url');
+      }
+    } catch (e) {
+      debugPrint('URL Launch Error: $e');
+      if (mounted) {
+        _showErrorSnackBar('Unable to open $platform. Please try again later.');
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.red.shade600,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        duration: const Duration(seconds: 4),
+        action: SnackBarAction(
+          label: 'Dismiss',
+          textColor: Colors.white,
+          onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+        ),
+      ),
+    );
+  }
+
+  void _showSuccessSnackBar(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_outline, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.green.shade600,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void _navigateToCalculator() {
+    try {
+      Navigator.push(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const CalculatorScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: animation.drive(
+                Tween(
+                  begin: const Offset(1.0, 0.0),
+                  end: Offset.zero,
+                ).chain(CurveTween(curve: Curves.easeOutCubic)),
+              ),
+              child: child,
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 300),
+        ),
+      );
+    } catch (e) {
+      debugPrint('Navigation Error: $e');
+      _showErrorSnackBar('Unable to open calculator. Please try again.');
+    }
   }
 
   @override
@@ -126,6 +230,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ],
             ),
           ),
+          // Loading overlay
+          if (_isLoading)
+            Container(
+              color: Colors.black.withValues(alpha: 0.3),
+              child: const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    AppConstants.accentColor,
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -145,11 +261,23 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               fit: BoxFit.cover,
               width: double.infinity,
               height: double.infinity,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: AppConstants.backgroundColor,
+                  child: const Center(
+                    child: Icon(
+                      Icons.image_not_supported,
+                      size: 50,
+                      color: AppConstants.secondaryTextColor,
+                    ),
+                  ),
+                );
+              },
             ),
             BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
               child: Container(
-                color: AppConstants.backgroundColor.withOpacity(0.3),
+                color: AppConstants.backgroundColor.withValues(alpha: 0.3),
               ),
             ),
           ],
@@ -164,90 +292,170 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Column(
       children: [
         Container(
-          width: 80, // Changed from double.infinity to 80 for icon size
-          height: 80, // Changed from 120 to 80 to make it square
+          width: 80,
+          height: 80,
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Colors.white.withOpacity(0.9),
-                AppConstants.surfaceColor.withOpacity(0.7),
+                Colors.white.withValues(alpha: 0.9),
+                AppConstants.surfaceColor.withValues(alpha: 0.7),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(20), // Reduced from 24 to 20
+            borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: AppConstants.accentColor.withOpacity(0.15),
-                blurRadius: 20, // Reduced from 30 to 20
-                offset: const Offset(0, 8), // Reduced from 10 to 8
+                color: AppConstants.accentColor.withValues(alpha: 0.15),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
               ),
               BoxShadow(
-                color: Colors.white.withOpacity(0.9),
-                blurRadius: 15, // Reduced from 20 to 15
-                offset: const Offset(0, -3), // Reduced from -5 to -3
+                color: Colors.white.withValues(alpha: 0.9),
+                blurRadius: 15,
+                offset: const Offset(0, -3),
               ),
             ],
-            border: Border.all(color: Colors.white.withOpacity(0.3), width: 0),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.3),
+              width: 0,
+            ),
           ),
           child: Center(
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(16), // Reduced from 16 to 12
+              borderRadius: BorderRadius.circular(16),
               child: Image.asset(
                 'assets/images/logo.jpeg',
                 fit: BoxFit.cover,
                 width: double.infinity,
                 height: double.infinity,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: AppConstants.accentColor.withValues(alpha: 0.1),
+                    child: const Icon(
+                      Icons.restaurant,
+                      size: 40,
+                      color: AppConstants.accentColor,
+                    ),
+                  );
+                },
               ),
             ),
           ),
         ),
         const SizedBox(height: 24),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            'KEBABOLOGIST',
-            style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-              fontWeight: FontWeight.w900,
-              letterSpacing: screenWidth < 380 ? 1.0 : 2.0,
-              fontSize: screenWidth < 380 ? 36 : 44,
-              color: Colors.white,
-              height: 1.0,
-              shadows: [
-                Shadow(
-                  offset: const Offset(3, 3),
-                  blurRadius: 8.0,
-                  color: Colors.black.withOpacity(0.5),
+        Column(
+          children: [
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                'OX',
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: screenWidth < 380 ? 1.0 : 2.0,
+                  fontSize: screenWidth < 380 ? 26 : 32,
+                  color: Colors.white,
+                  height: 1.0,
+                  shadows: [
+                    Shadow(
+                      offset: const Offset(3, 3),
+                      blurRadius: 8.0,
+                      color: Colors.black.withValues(alpha: 0.5),
+                    ),
+                    Shadow(
+                      offset: const Offset(-1, -1),
+                      blurRadius: 4.0,
+                      color: Colors.black.withValues(alpha: 0.3),
+                    ),
+                    Shadow(
+                      offset: const Offset(0, 0),
+                      blurRadius: 15.0,
+                      color: AppConstants.accentColor.withValues(alpha: 0.4),
+                    ),
+                  ],
                 ),
-                Shadow(
-                  offset: const Offset(-1, -1),
-                  blurRadius: 4.0,
-                  color: Colors.black.withOpacity(0.3),
-                ),
-                Shadow(
-                  offset: const Offset(0, 0),
-                  blurRadius: 15.0,
-                  color: AppConstants.accentColor.withOpacity(0.4),
-                ),
-              ],
+                maxLines: 1,
+                overflow: TextOverflow.visible,
+              ),
             ),
-            maxLines: 1,
-            overflow: TextOverflow.visible,
-          ),
+            const SizedBox(height: 4),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                'KEBABOLOGIST',
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: screenWidth < 380 ? 1.0 : 2.0,
+                  fontSize: screenWidth < 380 ? 26 : 32,
+                  color: Colors.white,
+                  height: 1.0,
+                  shadows: [
+                    Shadow(
+                      offset: const Offset(3, 3),
+                      blurRadius: 8.0,
+                      color: Colors.black.withValues(alpha: 0.5),
+                    ),
+                    Shadow(
+                      offset: const Offset(-1, -1),
+                      blurRadius: 4.0,
+                      color: Colors.black.withValues(alpha: 0.3),
+                    ),
+                    Shadow(
+                      offset: const Offset(0, 0),
+                      blurRadius: 15.0,
+                      color: AppConstants.accentColor.withValues(alpha: 0.4),
+                    ),
+                  ],
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.visible,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
-        // Added background container for social buttons
+        Text(
+          'Follow the socials here',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: Colors.white.withValues(alpha: 0.9),
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+            shadows: [
+              Shadow(
+                offset: const Offset(1, 1),
+                blurRadius: 4.0,
+                color: Colors.black.withValues(alpha: 0.4),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.3), // Semi-transparent background
-            borderRadius: BorderRadius.circular(25),
-            border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+            gradient: LinearGradient(
+              colors: [
+                Colors.black.withValues(alpha: 0.4),
+                Colors.black.withValues(alpha: 0.2),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.3),
+              width: 1.5,
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 15,
-                offset: const Offset(0, 5),
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+              BoxShadow(
+                color: Colors.white.withValues(alpha: 0.1),
+                blurRadius: 5,
+                offset: const Offset(0, -1),
               ),
             ],
           ),
@@ -260,6 +468,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 icon: FontAwesomeIcons.tiktok,
                 color: Colors.white,
                 url: 'https://www.tiktok.com/@ox_show?_t=8qxaraa9ruq&_r=1',
+                platform: 'TikTok',
               ),
               const SizedBox(width: 20),
               _buildSocialButton(
@@ -267,6 +476,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 icon: FontAwesomeIcons.instagram,
                 color: Colors.white,
                 url: 'https://www.instagram.com/ox_show2000',
+                platform: 'Instagram',
               ),
               const SizedBox(width: 20),
               _buildSocialButton(
@@ -274,6 +484,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 icon: FontAwesomeIcons.youtube,
                 color: Colors.white,
                 url: 'https://youtube.com/@oxshow2000?si=278jG7V-G1a4Y6hs',
+                platform: 'YouTube',
               ),
             ],
           ),
@@ -287,81 +498,73 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     required IconData icon,
     required Color color,
     required String url,
+    required String platform,
   }) {
-    return InkWell(
-      onTap: () async {
-        final Uri uri = Uri.parse(url);
-        try {
-          if (await canLaunchUrl(uri)) {
-            await launchUrl(uri, mode: LaunchMode.externalApplication);
-          } else {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text('Could not launch $url')));
-          }
-        } catch (e) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error: $e')));
-        }
-      },
-      child: Container(
-        width: 50,
-        height: 36,
-        // Remove the decoration to remove the background
-        // decoration: BoxDecoration(
-        //   color: Colors.red,
-        //   borderRadius: BorderRadius.circular(8),
-        //   boxShadow: [
-        //     BoxShadow(
-        //       color: Colors.black.withOpacity(0.2),
-        //       blurRadius: 4,
-        //       offset: const Offset(0, 2),
-        //     ),
-        //   ],
-        // ),
-        alignment: Alignment.center,
-        child: FaIcon(icon, color: color, size: 22),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: _isLoading ? null : () => _launchUrl(url, platform),
+        borderRadius: BorderRadius.circular(12),
+        splashColor: Colors.white.withValues(alpha: 0.2),
+        highlightColor: Colors.white.withValues(alpha: 0.1),
+        child: Container(
+          width: 45,
+          height: 40,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.white.withValues(alpha: 0.15),
+                Colors.white.withValues(alpha: 0.05),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.2),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+              BoxShadow(
+                color: Colors.white.withValues(alpha: 0.1),
+                blurRadius: 3,
+                offset: const Offset(0, -1),
+              ),
+            ],
+          ),
+          child: Center(
+            child: _isLoading
+                ? SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(color),
+                    ),
+                  )
+                : FaIcon(icon, color: color, size: 20),
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildEnhancedFeaturesSection(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Transform.scale(
-          scale: 1, // Adjust this value to make it smaller or larger
-          child: _buildEnhancedHeroCard(
-            context,
-            title: 'Kebab Calorie Calculator',
-            subtitle:
-                'Track nutrition & make informed choices for your kebabs.',
-            icon: FontAwesomeIcons.calculator,
-            onTap: () {
-              Navigator.push(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (context, animation, secondaryAnimation) =>
-                      const CalculatorScreen(),
-                  transitionsBuilder:
-                      (context, animation, secondaryAnimation, child) {
-                        return SlideTransition(
-                          position: animation.drive(
-                            Tween(
-                              begin: const Offset(1.0, 0.0),
-                              end: Offset.zero,
-                            ).chain(CurveTween(curve: Curves.easeOutCubic)),
-                          ),
-                          child: child,
-                        );
-                      },
-                  transitionDuration: const Duration(milliseconds: 300),
-                ),
-              );
-            },
-          ),
+        _buildEnhancedHeroCard(
+          context,
+          title: 'Kebab Calorie Calculator',
+          subtitle:
+              "See how many calories YOUR SPECIFIC KEBAB has. Never before seen KCC has been designed to calculate your exact kebab's calories taking the weight into consideration as well.",
+          icon: FontAwesomeIcons.calculator,
+          onTap: _navigateToCalculator,
         ),
         const SizedBox(height: 20),
         Row(
@@ -371,8 +574,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 context,
                 title: 'Kebabalogue',
                 subtitle:
-                    'The most detailed study conducted in the country on kebab shops. Come check out the shops and their ratings! Coming soon',
-                icon: FontAwesomeIcons.mapLocationDot,
+                    'The most detailed study conducted in the country on kebab shops. Come check out the shops and their ratings!',
+                useCustomImage: true,
+                customImagePath: 'assets/images/australia_shape.png',
                 primaryColor: const Color(0xFF2196F3),
                 isComingSoon: true,
                 onTap: () => _showEnhancedComingSoonDialog(context),
@@ -384,9 +588,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 context,
                 title: 'Fresh Tomatoes',
                 subtitle:
-                    'Kebab reviews - have your say on your most liked/disliked kebab shops that must be approved by me before publicly being posted. No fake reviews here!',
+                    'Kebab reviews - have your say on your most liked/disliked kebab shops. No fake reviews here!',
                 icon: FontAwesomeIcons.star,
-                primaryColor: const Color(0xFFE91E63),
+                primaryColor: Colors.redAccent,
                 isComingSoon: true,
                 onTap: () => _showEnhancedComingSoonDialog(context),
               ),
@@ -416,12 +620,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppConstants.accentColor.withOpacity(0.3),
+            color: AppConstants.accentColor.withValues(alpha: 0.3),
             blurRadius: 25,
             offset: const Offset(0, 10),
           ),
           BoxShadow(
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withValues(alpha: 0.1),
             blurRadius: 1,
             offset: const Offset(0, 1),
           ),
@@ -432,14 +636,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(24),
-          splashColor: Colors.white.withOpacity(0.1),
-          highlightColor: Colors.white.withOpacity(0.05),
+          splashColor: Colors.white.withValues(alpha: 0.1),
+          highlightColor: Colors.white.withValues(alpha: 0.05),
           child: Container(
-            padding: EdgeInsets.all(screenWidth < 380 ? 16 : 20),
+            padding: EdgeInsets.all(screenWidth < 380 ? 12 : 16),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(24),
               gradient: LinearGradient(
-                colors: [Colors.white.withOpacity(0.08), Colors.transparent],
+                colors: [
+                  Colors.white.withValues(alpha: 0.08),
+                  Colors.transparent,
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -448,23 +655,30 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
-                  width: screenWidth < 380 ? 56 : 64,
-                  height: screenWidth < 380 ? 56 : 64,
+                  width: screenWidth < 380 ? 55 : 65,
+                  height: screenWidth < 380 ? 55 : 65,
                   alignment: Alignment.center,
                   child: title == 'Kebab Calorie Calculator'
                       ? Image.asset(
                           'assets/images/icon.png',
-                          width: screenWidth < 380 ? 40 : 48,
-                          height: screenWidth < 380 ? 40 : 48,
+                          width: screenWidth < 380 ? 38 : 45,
+                          height: screenWidth < 380 ? 38 : 45,
                           fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            return FaIcon(
+                              icon,
+                              color: Colors.white,
+                              size: screenWidth < 380 ? 30 : 38,
+                            );
+                          },
                         )
                       : FaIcon(
                           icon,
                           color: Colors.white,
-                          size: screenWidth < 380 ? 36 : 40,
+                          size: screenWidth < 380 ? 30 : 38,
                         ),
                 ),
-                SizedBox(width: screenWidth < 380 ? 12 : 18),
+                SizedBox(width: screenWidth < 380 ? 5 : 6),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -475,38 +689,36 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           color: Colors.white,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.5,
-                          fontSize: screenWidth < 380
-                              ? 15
-                              : 18, // Reduced from 18:22
+                          fontSize: screenWidth < 380 ? 14 : 16,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 3),
                       Text(
                         subtitle,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withOpacity(0.92),
-                          height: 1.5,
-                          fontSize: screenWidth < 380 ? 12 : 14,
+                          color: Colors.white.withValues(alpha: 0.92),
+                          height: 1.2,
+                          fontSize: screenWidth < 380 ? 10 : 12,
                         ),
-                        maxLines: 2,
+                        maxLines: 6,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.13),
-                    borderRadius: BorderRadius.circular(14),
+                    color: Colors.white.withValues(alpha: 0.13),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     Icons.arrow_forward_ios,
-                    color: Colors.white.withOpacity(0.85),
-                    size: 18,
+                    color: Colors.white.withValues(alpha: 0.85),
+                    size: 14,
                   ),
                 ),
               ],
@@ -521,28 +733,30 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     BuildContext context, {
     required String title,
     required String subtitle,
-    required IconData icon,
+    IconData? icon,
+    String? customImagePath,
+    bool useCustomImage = false,
     required Color primaryColor,
     required VoidCallback onTap,
     bool isComingSoon = false,
   }) {
     return Container(
-      height: 210,
+      height: 220,
       decoration: BoxDecoration(
         color: AppConstants.cardColor,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppConstants.borderColor.withOpacity(0.5),
+          color: AppConstants.borderColor.withValues(alpha: 0.5),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
           BoxShadow(
-            color: Colors.white.withOpacity(0.8),
+            color: Colors.white.withValues(alpha: 0.8),
             blurRadius: 1,
             offset: const Offset(0, 1),
           ),
@@ -553,14 +767,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(20),
-          splashColor: primaryColor.withOpacity(0.1),
-          highlightColor: primaryColor.withOpacity(0.05),
+          splashColor: primaryColor.withValues(alpha: 0.1),
+          highlightColor: primaryColor.withValues(alpha: 0.05),
           child: Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               gradient: LinearGradient(
-                colors: [Colors.white.withOpacity(0.5), Colors.transparent],
+                colors: [
+                  Colors.white.withValues(alpha: 0.5),
+                  Colors.transparent,
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -573,19 +790,33 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        primaryColor.withOpacity(0.15),
-                        primaryColor.withOpacity(0.05),
+                        primaryColor.withValues(alpha: 0.15),
+                        primaryColor.withValues(alpha: 0.05),
                       ],
                     ),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: primaryColor.withOpacity(0.2),
+                      color: primaryColor.withValues(alpha: 0.2),
                       width: 1,
                     ),
                   ),
-                  child: FaIcon(icon, color: primaryColor, size: 28),
+                  child: useCustomImage
+                      ? Image.asset(
+                          customImagePath!,
+                          width: 24,
+                          height: 24,
+                          color: primaryColor,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Icon(
+                              Icons.image_not_supported,
+                              color: primaryColor,
+                              size: 24,
+                            );
+                          },
+                        )
+                      : FaIcon(icon!, color: primaryColor, size: 24),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 6),
                 Text(
                   title,
                   textAlign: TextAlign.center,
@@ -593,23 +824,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     fontWeight: FontWeight.w700,
                     color: AppConstants.textColor,
                     letterSpacing: -0.2,
+                    fontSize: 13,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
                 Text(
                   subtitle,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppConstants.secondaryTextColor,
-                    fontSize: 9,
+                    fontSize: 10,
+                    height: 1.2,
                   ),
                   maxLines: 5,
-                  overflow: TextOverflow.visible,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 if (isComingSoon) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
@@ -618,13 +851,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          AppConstants.goldAccent.withOpacity(0.2),
-                          AppConstants.goldAccent.withOpacity(0.1),
+                          AppConstants.goldAccent.withValues(alpha: 0.2),
+                          AppConstants.goldAccent.withValues(alpha: 0.1),
                         ],
                       ),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: AppConstants.goldAccent.withOpacity(0.4),
+                        color: AppConstants.goldAccent.withValues(alpha: 0.4),
                         width: 1,
                       ),
                     ),
@@ -634,12 +867,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         color: AppConstants.goldAccent,
                         fontSize: 9,
                         fontWeight: FontWeight.bold,
-                        letterSpacing: 0.8,
+                        letterSpacing: 0.6,
                       ),
                     ),
                   ),
-                ] else ...[
-                  const SizedBox(height: 8),
                 ],
               ],
             ),
@@ -655,7 +886,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),
@@ -667,7 +898,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppConstants.goldAccent.withOpacity(0.1),
+              color: AppConstants.goldAccent.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Image.asset(
@@ -675,6 +906,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               width: 20,
               height: 20,
               fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                return const Icon(
+                  Icons.restaurant_menu,
+                  size: 20,
+                  color: AppConstants.goldAccent,
+                );
+              },
             ),
           ),
           const SizedBox(width: 12),
@@ -695,28 +933,28 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     showDialog(
       context: context,
       barrierDismissible: true,
-      barrierColor: Colors.black.withOpacity(0.7),
-      builder: (BuildContext dialogContext) {
+      builder: (BuildContext context) {
         return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
-          ),
-          elevation: 0,
           backgroundColor: Colors.transparent,
           child: Container(
-            padding: const EdgeInsets.all(28),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(28),
-              color: AppConstants.surfaceColor,
+              color: AppConstants.cardColor,
+              borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: Colors.white.withOpacity(0.2),
-                width: 1,
+                color: AppConstants.goldAccent.withValues(alpha: 0.3),
+                width: 2,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
+                  color: Colors.black.withValues(alpha: 0.2),
                   blurRadius: 30,
                   offset: const Offset(0, 15),
+                ),
+                BoxShadow(
+                  color: AppConstants.goldAccent.withValues(alpha: 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 5),
                 ),
               ],
             ),
@@ -724,65 +962,75 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      colors: [
+                        AppConstants.goldAccent.withValues(alpha: 0.2),
+                        AppConstants.goldAccent.withValues(alpha: 0.05),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(50),
+                  ),
+                  child: const Icon(
+                    Icons.schedule,
+                    size: 48,
+                    color: AppConstants.goldAccent,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Coming Soon!',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppConstants.textColor,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'This feature is currently under development and will be available in a future update. Stay tuned!',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppConstants.secondaryTextColor,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Container(
+                  width: double.infinity,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
                         AppConstants.goldAccent,
-                        AppConstants.goldAccent.withOpacity(0.8),
+                        AppConstants.goldAccent.withValues(alpha: 0.8),
                       ],
                     ),
-                    shape: BoxShape.circle,
+                    borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: AppConstants.goldAccent.withOpacity(0.4),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
+                        color: AppConstants.goldAccent.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-                  child: const Text('🚀', style: TextStyle(fontSize: 36)),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Feature Coming Soon!',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppConstants.textColor,
-                    letterSpacing: -0.5,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  "We're crafting something amazing! This feature will be available in our next update.",
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppConstants.secondaryTextColor,
-                    height: 1.5,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 28),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(dialogContext),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppConstants.accentColor,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 5,
-                      shadowColor: AppConstants.accentColor.withOpacity(0.3),
-                    ),
-                    child: Text(
-                      'Got It!',
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => Navigator.of(context).pop(),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        child: const Text(
+                          'Got it!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
                       ),
                     ),
                   ),

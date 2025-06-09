@@ -34,15 +34,15 @@ class ComponentSelector extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: errorMessage != null
-              ? AppConstants.accentColor.withOpacity(0.5)
-              : AppConstants.borderColor.withOpacity(0.5),
+              ? AppConstants.accentColor.withValues(alpha: 0.5)
+              : AppConstants.borderColor.withValues(alpha: 0.5),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
             color: errorMessage != null
-                ? AppConstants.accentColor.withOpacity(0.1)
-                : Colors.black.withOpacity(0.05),
+                ? AppConstants.accentColor.withValues(alpha: 0.1)
+                : Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -54,14 +54,14 @@ class ComponentSelector extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: _getHeaderColor().withOpacity(0.05),
+              color: _getHeaderColor().withValues(alpha: 0.05),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
               ),
               border: Border(
                 bottom: BorderSide(
-                  color: AppConstants.borderColor.withOpacity(0.3),
+                  color: AppConstants.borderColor.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -95,8 +95,8 @@ class ComponentSelector extends StatelessWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: AppConstants.secondaryTextColor.withOpacity(
-                            0.1,
+                          color: AppConstants.secondaryTextColor.withValues(
+                            alpha: 0.1,
                           ),
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -120,10 +120,10 @@ class ComponentSelector extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppConstants.accentColor.withOpacity(0.1),
+                color: AppConstants.accentColor.withValues(alpha: 0.1),
                 border: Border(
                   bottom: BorderSide(
-                    color: AppConstants.accentColor.withOpacity(0.3),
+                    color: AppConstants.accentColor.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -191,9 +191,12 @@ class ComponentSelector extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: _getHeaderColor().withOpacity(0.1),
+        color: _getHeaderColor().withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _getHeaderColor().withOpacity(0.3), width: 1),
+        border: Border.all(
+          color: _getHeaderColor().withValues(alpha: 0.3),
+          width: 1,
+        ),
       ),
       child: Text(
         count.toString(),
@@ -246,13 +249,13 @@ class ComponentSelector extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
             color: isSelected
-                ? _getHeaderColor().withOpacity(0.15)
+                ? _getHeaderColor().withValues(alpha: 0.15)
                 : AppConstants.surfaceColor,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isSelected
                   ? _getHeaderColor()
-                  : AppConstants.borderColor.withOpacity(0.5),
+                  : AppConstants.borderColor.withValues(alpha: 0.5),
               width: isSelected ? 2 : 1,
             ),
           ),
@@ -280,11 +283,9 @@ class ComponentSelector extends StatelessWidget {
               Text(
                 component.name,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: isSelected
-                      ? FontWeight.w600
-                      : FontWeight.w500,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   color: isDisabled
-                      ? AppConstants.secondaryTextColor.withOpacity(0.5)
+                      ? AppConstants.secondaryTextColor.withValues(alpha: 0.5)
                       : AppConstants.textColor,
                 ),
               ),

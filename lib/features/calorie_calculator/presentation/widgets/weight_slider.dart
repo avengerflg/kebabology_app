@@ -22,12 +22,12 @@ class WeightSlider extends StatelessWidget {
         color: AppConstants.cardColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppConstants.borderColor.withOpacity(0.5),
+          color: AppConstants.borderColor.withValues(alpha: 0.5),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -39,14 +39,14 @@ class WeightSlider extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppConstants.goldAccent.withOpacity(0.05),
+              color: AppConstants.goldAccent.withValues(alpha: 0.05),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
               ),
               border: Border(
                 bottom: BorderSide(
-                  color: AppConstants.borderColor.withOpacity(0.3),
+                  color: AppConstants.borderColor.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -79,10 +79,10 @@ class WeightSlider extends StatelessWidget {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: AppConstants.goldAccent.withOpacity(0.1),
+                    color: AppConstants.goldAccent.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: AppConstants.goldAccent.withOpacity(0.3),
+                      color: AppConstants.goldAccent.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
@@ -104,11 +104,13 @@ class WeightSlider extends StatelessWidget {
                 SliderTheme(
                   data: SliderTheme.of(context).copyWith(
                     activeTrackColor: AppConstants.goldAccent,
-                    inactiveTrackColor: AppConstants.goldAccent.withOpacity(
-                      0.2,
+                    inactiveTrackColor: AppConstants.goldAccent.withValues(
+                      alpha: 0.2,
                     ),
                     thumbColor: AppConstants.goldAccent,
-                    overlayColor: AppConstants.goldAccent.withOpacity(0.2),
+                    overlayColor: AppConstants.goldAccent.withValues(
+                      alpha: 0.2,
+                    ),
                     thumbShape: const RoundSliderThumbShape(
                       enabledThumbRadius: 12,
                     ),
@@ -158,7 +160,7 @@ class WeightSlider extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: _getWeightDifferenceColor().withOpacity(0.1),
+                      color: _getWeightDifferenceColor().withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(

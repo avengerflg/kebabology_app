@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import '../../data/models/kebab_component.dart';
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/utils/calculations.dart';
 
 class NutritionDisplay extends StatelessWidget {
   final Map<String, double> totalNutrition;
@@ -45,10 +44,10 @@ class NutritionDisplay extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppConstants.accentColor.withOpacity(0.1),
+        color: AppConstants.accentColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppConstants.accentColor.withOpacity(0.3),
+          color: AppConstants.accentColor.withValues(alpha: 0.3),
           width: 1.5,
         ),
       ),
@@ -90,7 +89,7 @@ class NutritionDisplay extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppConstants.accentColor.withOpacity(0.3),
+            color: AppConstants.accentColor.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -101,7 +100,7 @@ class NutritionDisplay extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           gradient: LinearGradient(
-            colors: [Colors.white.withOpacity(0.1), Colors.transparent],
+            colors: [Colors.white.withValues(alpha: 0.1), Colors.transparent],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -152,7 +151,7 @@ class NutritionDisplay extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: iconColor, size: 24),
@@ -173,7 +172,7 @@ class NutritionDisplay extends StatelessWidget {
             Text(
               unit,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
               ),
             ),
           ],
@@ -182,7 +181,7 @@ class NutritionDisplay extends StatelessWidget {
         Text(
           label,
           style: theme.textTheme.labelMedium?.copyWith(
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withValues(alpha: 0.9),
           ),
         ),
       ],
@@ -207,12 +206,12 @@ class NutritionDisplay extends StatelessWidget {
         color: AppConstants.cardColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppConstants.borderColor.withOpacity(0.5),
+          color: AppConstants.borderColor.withValues(alpha: 0.5),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -280,7 +279,7 @@ class NutritionDisplay extends StatelessWidget {
           Container(
             width: double.infinity,
             height: 1,
-            color: AppConstants.borderColor.withOpacity(0.5),
+            color: AppConstants.borderColor.withValues(alpha: 0.5),
           ),
         ],
       ),
